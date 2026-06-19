@@ -681,9 +681,8 @@ function CommonDashboard({allData,onOpenDept}){
                   <XAxis type="number" domain={[0,100]} tick={{fontSize:10,fill:ct.axis}} tickFormatter={v=>`${v}%`}/>
                   <YAxis type="category" dataKey="name" tick={{fontSize:11,fill:dark?"#cbd5e1":"#475569"}} width={88}/>
                   <Tooltip contentStyle={ct.tooltip} formatter={v=>[v===null?"No data":`${v}%`,"On Track"]} cursor={{fill:dark?"rgba(255,255,255,0.04)":"rgba(0,0,0,0.04)"}}/>
-                  <Bar dataKey="health" radius={[0,6,6,0]} barSize={16} className="cursor-pointer"
-                    onClick={(data)=>{if(data?.id) onOpenDept(data.id);}}>
-                    {deptBarData.map((d,i)=><Cell key={i} fill={d.fill}/>)}
+                  <Bar dataKey="health" radius={[0,6,6,0]} barSize={16} className="cursor-pointer" onClick={(d)=>onOpenDept(d.id)}>
+                    {deptBarData.map((d,i)=><Cell key={i} fill={d.fill} onClick={()=>onOpenDept(d.id)}/>)}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -702,8 +701,8 @@ function CommonDashboard({allData,onOpenDept}){
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={statusPieData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={76} paddingAngle={3} className="cursor-pointer"
-                    onClick={d=>{ if(d?.name) setStatusFilter(STATUS_NAME_TO_KEY[d.name]||"all"); }}>
-                    {statusPieData.map((d,i)=><Cell key={i} fill={d.color}/>)}
+                    onClick={d=>setStatusFilter(STATUS_NAME_TO_KEY[d.name]||"all")}>
+                    {statusPieData.map((d,i)=><Cell key={i} fill={d.color} onClick={()=>setStatusFilter(STATUS_NAME_TO_KEY[d.name]||"all")}/>)}
                   </Pie>
                   <Tooltip contentStyle={ct.tooltip}/>
                   <Legend verticalAlign="bottom" height={36} wrapperStyle={{fontSize:11}}/>
@@ -1072,15 +1071,13 @@ function AddKpiModal({deptId,workstations,onAdd,onClose}){
    ============================================================================ */
 function LogDataPage({deptId,kpis,onSave,onPickDept,allData}){
   const toast=useToast();
-  const [draft,setDraft]=useState(()=>[...kpis]);
+  const [draft,setDraft]=useState(kpis);
   const [extraMonths,setExtraMonths]=useState(0);
   const [showAddModal,setShowAddModal]=useState(false);
   const [saving,setSaving]=useState(false);
   const [savedFlash,setSavedFlash]=useState(false);
   const [dirty,setDirty]=useState(false);
-  // kpis removed from deps — allData[null]||[] creates new [] every render → infinite loop
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(()=>{setDraft([...kpis]);setExtraMonths(0);setDirty(false);},[deptId]);
+  useEffect(()=>{setDraft(kpis);setExtraMonths(0);setDirty(false);},[deptId,kpis]);
   if(!deptId){
     return(
       <div className="space-y-4 animate-fadeIn">
@@ -1322,7 +1319,7 @@ export default function App(){
   let body;
   if(view.type==="common") body=<CommonDashboard allData={allData} onOpenDept={openDept}/>;
   else if(view.type==="department") body=<DepartmentDashboard deptId={view.id} kpis={allData[view.id]||[]} onLogData={openLog}/>;
-  else body=<LogDataPage key={logDeptId??'__picker__'} deptId={logDeptId} kpis={logDeptId?allData[logDeptId]||[]:[]} onSave={handleSaveDept} onPickDept={id=>setLogDeptId(id)} allData={allData}/>;
+  else body=<LogDataPage deptId={logDeptId} kpis={allData[logDeptId]||[]} onSave={handleSaveDept} onPickDept={id=>setLogDeptId(id)} allData={allData}/>;
 
   return(
     <ThemeContext.Provider value={dark}>
